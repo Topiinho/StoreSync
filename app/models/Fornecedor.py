@@ -1,30 +1,30 @@
 from config.database_config import conectar_banco
 
-def cadastrar_fornecedor(nome, descricao):
+def cadastrar_fornecedor(nome :str, descricao :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
+        cursor.execute(f"""
             select 1
 		    from tbFornecedor
-		    where NomeFornecedor = ?
-            """, (nome))
+		    where NomeFornecedor = {nome}
+            """)
         tabela = cursor.fetchone()
 
         if tabela:
-            cursor.execute("""
+            cursor.execute(f"""
                 updateupdate tbFornecedor
-			        set dsFornecedor = ?
-			        where NomeFornecedor = ?
-                """, (descricao, nome))
+			        set dsFornecedor = {descricao}
+			        where NomeFornecedor = {nome}
+                """)
             print("descrição do fornecedor atualizado!")
         
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 insert into tbFornecedor (NomeFornecedor, dsFornecedor)
-		            values (?, ?)
-                """, (nome, descricao))
+		            values ({nome}, {descricao})
+                """)
             print("Fornecedor cadastrado com sucesso!")
         
         conn.commit()
@@ -37,7 +37,7 @@ def cadastrar_fornecedor(nome, descricao):
         cursor.close()
         conn.close()
 
-def listar_fornecedor (filtro, coluna):
+def listar_fornecedor (filtro, coluna :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
@@ -52,11 +52,11 @@ def listar_fornecedor (filtro, coluna):
                 print(row)
 
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT * 
                 FROM tbFornecedor
-                where ? = ?
-                """, (coluna, filtro))
+                where {coluna} = {filtro}
+                """)
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -69,7 +69,7 @@ def listar_fornecedor (filtro, coluna):
         cursor.close()
         conn.close()
 
-def coletar_fornecedor (filtro, coluna, coluna_desejada):
+def coletar_fornecedor (filtro, coluna :str, coluna_desejada :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 

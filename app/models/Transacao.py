@@ -8,10 +8,10 @@ def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: int,
     try:
         custoUnitario = custoTotal / quantidade
 
-        cursor.execute("""
+        cursor.execute(f"""
             insert into tbCompra(idProduto, idFornecedor, CustoUnitario, Quantidade, CustoTotal, Data)
-	        	values (?, ?, ?, ?, ?, ?);
-            """, (idProduto, idFornecedor, custoUnitario, quantidade, custoTotal, data))
+	        	values ({idProduto}, {idFornecedor}, {custoUnitario}, {quantidade}, {custoTotal}, {data});
+            """)
         
         estoque = (coletar_produto(idProduto, "idProduto", "Estoque"))[0]
         custoMedio = (coletar_produto(idProduto, "idProduto", "CustoMedio"))[0]

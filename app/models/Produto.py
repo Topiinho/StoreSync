@@ -1,6 +1,6 @@
 from config.database_config import conectar_banco
 
-def cadastrar_produto (nome, modelo, custoMedio, estoque, tags, descricao):
+def cadastrar_produto (nome :str, modelo :str, custoMedio :int, estoque :int, tags :str, descricao :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
@@ -26,8 +26,8 @@ def cadastrar_produto (nome, modelo, custoMedio, estoque, tags, descricao):
         else:
             cursor.execute(f"""
                 insert into tbProduto (NomeProduto, Modelo, Tags, CustoMedio, Estoque, Descricao)
-	    	        values (?,?,?,?,?,?)
-            """,(nome, modelo, tags, custoMedio, estoque, descricao))
+	    	        values ({nome},{modelo},{tags},{custoMedio},{estoque},{descricao})
+            """)
             print("Produto cadastro com sucesso!")
         
         conn.commit()
@@ -40,7 +40,7 @@ def cadastrar_produto (nome, modelo, custoMedio, estoque, tags, descricao):
         cursor.close()
         conn.close()
 
-def listar_produtos (filtro, coluna):
+def listar_produtos (filtro, coluna :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
@@ -72,7 +72,7 @@ def listar_produtos (filtro, coluna):
         cursor.close()
         conn.close()
 
-def coletar_produto (filtro: int, coluna: str, coluna_desejada: str):
+def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
