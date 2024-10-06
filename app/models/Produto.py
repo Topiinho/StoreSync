@@ -5,27 +5,30 @@ def cadastrar_produto (nome, modelo, custoMedio, estoque, tags, descricao):
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
+        cursor.execute(f"""
             select 1
 	    	from tbProduto
-	    	where NomeProduto = ?
-	    		and Modelo = ?
-            """,(nome, modelo))
-        retorno = cursor.fetchone()
+	    	where NomeProduto = {nome}
+	    		and Modelo = {modelo}
+            """)
+        tabela = cursor.fetchone()
 
-        if retorno :
-            cursor.execute("""
+        if tabela :
+            cursor.execute(f"""
             update tbProduto
-	    		set Descricao = ?,
-                    Tags = ?
-	    		where NomeProduto = ?
-	    			and Modelo = ?
-            """, (descricao, tags, nome, modelo))
+	    		set Descricao = {descricao},
+                    Tags = {tags}
+	    		where NomeProduto = {nome}
+	    			and Modelo = {modelo}
+            """)
+            print("Descrição do produto atualizado com sucesso!")
+
         else:
             cursor.execute(f"""
                 insert into tbProduto (NomeProduto, Modelo, Tags, CustoMedio, Estoque, Descricao)
 	    	        values (?,?,?,?,?,?)
             """,(nome, modelo, tags, custoMedio, estoque, descricao))
+            print("Produto cadastro com sucesso!")
         
         conn.commit()
 
@@ -52,11 +55,11 @@ def listar_produtos (filtro, coluna):
                 print(row)
 
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT * 
                 FROM tbProduto
-                where ? = ?
-                """, (coluna, filtro))
+                where {coluna} = {filtro}
+                """)
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -68,3 +71,38 @@ def listar_produtos (filtro, coluna):
     finally:
         cursor.close()
         conn.close()
+
+def coletar_produto (filtro: int, coluna: str, coluna_desejada: str):
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(f"""
+            SELECT {coluna_desejada}
+            FROM tbProduto
+            where {coluna} = {filtro}
+            """)
+        tabela = cursor.fetchall()
+        
+        if tabela:
+            i = tabela[0]
+        else:
+            raise ValueError ("Produto não cadastrado")
+    
+    except ValueError as e:
+        print(e)
+        return None
+
+    except Exception as e:
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return i
+
+
+
+
+
