@@ -102,6 +102,25 @@ def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
     
     return i
 
+def atualizar_estoque (idProduto: int, estoque: int):
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(f"""
+            update  tbProduto
+			set Estoque = {estoque}
+			where idProduto = {idProduto}
+            """)
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
