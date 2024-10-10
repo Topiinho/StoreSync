@@ -1,6 +1,6 @@
 from config.database_config import conectar_banco
 
-def cadastrar_produto (nome :str, modelo :str, custoMedio :int, estoque :int, tags :str, descricao :str):
+def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, tags :str, descricao :str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
@@ -15,19 +15,19 @@ def cadastrar_produto (nome :str, modelo :str, custoMedio :int, estoque :int, ta
 
         if tabela :
             cursor.execute(f"""
-            update tbProduto
-	    		set Descricao = {descricao},
-                    Tags = {tags}
-	    		where NomeProduto = {nome}
-	    			and Modelo = {modelo}
-            """)
+                update tbProduto
+	    	    	set Descricao = {descricao},
+                        Tags = {tags}
+	    	    	where NomeProduto = {nome}
+	    	    		and Modelo = {modelo}
+                """)
             print("Descrição do produto atualizado com sucesso!")
 
         else:
             cursor.execute(f"""
                 insert into tbProduto (NomeProduto, Modelo, Tags, CustoMedio, Estoque, Descricao)
 	    	        values ({nome},{modelo},{tags},{custoMedio},{estoque},{descricao})
-            """)
+                """)
             print("Produto cadastro com sucesso!")
         
         conn.commit()

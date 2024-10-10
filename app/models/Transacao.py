@@ -1,7 +1,7 @@
 from config.database_config import conectar_banco
 from app.models.Produto import coletar_produto, atualizar_estoque
 
-def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: int, data: str):
+def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: float, data: str):
     conn = conectar_banco()
     cursor = conn.cursor()
 
@@ -72,6 +72,98 @@ def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
     finally:
         cursor.close()
         conn.close()
+
+def consulta (tabela: str,coluna: str, filtro):
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(f"""
+            SELECT FROM {tabela}
+                where {coluna} = {filtro}
+            """)
+        tabela = cursor.fetchall()
+        
+        if not tabela:
+            raise ValueError ("Não foi encontrado vendas com base no filtro passado!")
+
+    except ValueError as e:
+        print(e)
+        return None
+
+    except Exception as e:
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return tabela
+
+def consulta_venda (colunaDesejada: str,coluna: str, filtro):
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(f"""
+            SELECT {colunaDesejada}
+            FROM tbVendaProduto
+                where {coluna} = {filtro}
+            """)
+        tabela = cursor.fetchall()
+        
+        if not tabela:
+            raise ValueError ("Não foi encontrado vendas com base no filtro passado!")
+
+    except ValueError as e:
+        print(e)
+        return None
+
+    except Exception as e:
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return tabela
+
+def faturamento (data: str):
+    conn = conectar_banco()
+    cursor = conn.cursor()
+
+    try:
+        if consulta("tbVendaProduto","Data", data):
+            if not consulta("tbFaturamentoVenda", "Data", data):
+
+                valorCusto: float = sum(consulta_venda("ValorCusto","Data", data))
+                valorVenda: float = sum(consulta_venda("ValorVenda","Data", data))
+                valorLucro: float = sum(consulta_venda("ValorLucro","Data", data))
+
+                cursor.execute(f"""
+                    insert into tbFaturamentoVenda (ValorCusto, ValorVenda, ValorLucro, Data)
+		                values ({valorCusto}, {valorVenda}, {valorLucro}, {data})
+                    """)
+                
+                conn.commit()
+            
+            else:
+                raise ValueError ("Já foi realizado o faturamento dessa data!")
+        else:
+            raise ValueError ("Não houve vendas nessa data!")
+    
+    except ValueError as e:
+        conn.rollback()
+        print(e)
+
+    except Exception as e:
+        conn.rollback()
+        raise e
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 
