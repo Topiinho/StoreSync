@@ -79,7 +79,7 @@ def consulta (tabela: str,coluna: str, filtro):
 
     try:
         cursor.execute(f"""
-            SELECT FROM {tabela}
+            SELECT * FROM {tabela}
                 where {coluna} = {filtro}
             """)
         tabela = cursor.fetchall()
