@@ -1,4 +1,4 @@
-from config.database_config import conectar_banco
+from data.database_config import conectar_banco
 
 def cadastrar_fornecedor(nome :str, descricao :str):
     conn = conectar_banco()

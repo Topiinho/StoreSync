@@ -1,4 +1,4 @@
-from config.database_config import conectar_banco
+from data.database_config import conectar_banco
 from app.models.Produto import coletar_produto, atualizar_estoque
 
 def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: float, data: str):
