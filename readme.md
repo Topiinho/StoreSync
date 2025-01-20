@@ -1,7 +1,7 @@
 # Sistema de controle de lojas
 
 ## Colaboradores
-Luizphelipe31
+Topiinho & Luizphelipe31
 
 ## Sobre o projeto
 Este programa serve para gerenciar a compra e venda de produtos
