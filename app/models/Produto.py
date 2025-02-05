@@ -1,33 +1,33 @@
-from data.database_config import conectar_banco
+from data.database import conectar_banco
 
 def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, tags :str, descricao :str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
+        cursor.execute("""
             select 1
 	    	from tbProduto
-	    	where NomeProduto = {nome}
-	    		and Modelo = {modelo}
-            """)
+	    	where NomeProduto = ?
+	    		and Modelo = ?
+            """, (nome, modelo))
         tabela = cursor.fetchone()
 
         if tabela :
-            cursor.execute(f"""
+            cursor.execute("""
                 update tbProduto
-	    	    	set Descricao = {descricao},
-                        Tags = {tags}
-	    	    	where NomeProduto = {nome}
-	    	    		and Modelo = {modelo}
-                """)
+	    	    	set Descricao = ?,
+                        Tags = ?
+	    	    	where NomeProduto = ?
+	    	    		and Modelo = ?
+                """, (descricao, tags, nome, modelo))
             print("Descrição do produto atualizado com sucesso!")
 
         else:
-            cursor.execute(f"""
+            cursor.execute("""
                 insert into tbProduto (NomeProduto, Modelo, Tags, CustoMedio, Estoque, Descricao)
-	    	        values ({nome},{modelo},{tags},{custoMedio},{estoque},{descricao})
-                """)
+	    	        values (?,?,?,?,?,?)
+                """, (nome, modelo,tags, custoMedio, estoque, descricao))
             print("Produto cadastro com sucesso!")
         
         conn.commit()
@@ -41,7 +41,7 @@ def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, 
         conn.close()
 
 def listar_produtos (filtro, coluna :str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
@@ -55,11 +55,11 @@ def listar_produtos (filtro, coluna :str):
                 print(row)
 
         else:
-            cursor.execute(f"""
+            cursor.execute("""
                 SELECT * 
                 FROM tbProduto
-                where {coluna} = {filtro}
-                """)
+                where ? = ?
+                """, (coluna, filtro))
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -73,15 +73,15 @@ def listar_produtos (filtro, coluna :str):
         conn.close()
 
 def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
-            SELECT {coluna_desejada}
+        cursor.execute("""
+            SELECT ?
             FROM tbProduto
-            where {coluna} = {filtro}
-            """)
+            where ? = ?
+            """, (coluna_desejada, coluna, filtro))
         tabela = cursor.fetchall()
         
         if tabela:
@@ -103,15 +103,15 @@ def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
     return i
 
 def atualizar_estoque (idProduto: int, estoque: int):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
+        cursor.execute("""
             update  tbProduto
-			set Estoque = {estoque}
-			where idProduto = {idProduto}
-            """)
+			set Estoque = ?
+			where idProduto = ?
+            """, (estoque, idProduto))
         conn.commit()
 
     except Exception as e:

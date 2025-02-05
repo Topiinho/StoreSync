@@ -1,30 +1,30 @@
-from data.database_config import conectar_banco
+from data.database import conectar_banco
 
 def cadastrar_fornecedor(nome :str, descricao :str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
+        cursor.execute("""
             select 1
 		    from tbFornecedor
-		    where NomeFornecedor = {nome}
-            """)
+		    where NomeFornecedor = ?
+            """, (nome, ))
         tabela = cursor.fetchone()
 
         if tabela:
-            cursor.execute(f"""
+            cursor.execute("""
                 update tbFornecedor
-			        set dsFornecedor = {descricao}
-			        where NomeFornecedor = {nome}
-                """)
+			        set dsFornecedor = ?
+			        where NomeFornecedor = ?
+                """, (descricao, nome))
             print("descrição do fornecedor atualizado!")
         
         else:
-            cursor.execute(f"""
+            cursor.execute("""
                 insert into tbFornecedor (NomeFornecedor, dsFornecedor)
-		            values ({nome}, {descricao})
-                """)
+		            values (?, ?)
+                """, (nome, descricao))
             print("Fornecedor cadastrado com sucesso!")
         
         conn.commit()
@@ -38,7 +38,7 @@ def cadastrar_fornecedor(nome :str, descricao :str):
         conn.close()
 
 def listar_fornecedor (filtro, coluna :str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
@@ -52,11 +52,11 @@ def listar_fornecedor (filtro, coluna :str):
                 print(row)
 
         else:
-            cursor.execute(f"""
+            cursor.execute("""
                 SELECT * 
                 FROM tbFornecedor
-                where {coluna} = {filtro}
-                """)
+                where ? = ?
+                """, (coluna, filtro))
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -70,15 +70,15 @@ def listar_fornecedor (filtro, coluna :str):
         conn.close()
 
 def coletar_fornecedor (filtro, coluna :str, coluna_desejada :str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
-            SELECT {coluna_desejada} 
+        cursor.execute("""
+            SELECT ? 
             FROM tbFornecedor
-            where {coluna} = {filtro}
-            """)
+            where ? = ?
+            """, (coluna_desejada, coluna, filtro))
         tabela = cursor.fetchone()
         
         if tabela:
@@ -100,15 +100,15 @@ def coletar_fornecedor (filtro, coluna :str, coluna_desejada :str):
     return i
 
 def verifica_cadastro (nome: str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
+        cursor.execute("""
             select 1
 		    from tbFornecedor
-		    where NomeFornecedor = {nome}
-            """)
+		    where NomeFornecedor = ?
+            """, (nome, ))
         tabela = cursor.fetchall()
 
     except Exception as e:
@@ -127,7 +127,7 @@ class fornecedor:
         self.nome = nome
 
     def cadastrar(self, descricao: str):
-        conn = conectar_banco()
+        conn = conectar_banco("database")
         cursor = conn.cursor()
         nome = self.nome
 
@@ -137,10 +137,10 @@ class fornecedor:
             if id:
                 raise ValueError ("Fornecedor cadastrado")
 
-            cursor.execute(f"""
+            cursor.execute("""
                 insert into tbFornecedor (NomeFornecedor, dsFornecedor)
-	    	        values ({nome}, {descricao})
-                """)
+	    	        values (?, ?)
+                """, (nome, descricao))
             print("Fornecedor cadastrado com sucesso!")
             conn.commit()
 
@@ -157,7 +157,7 @@ class fornecedor:
             conn.close()
         
     def atualziar_descricao(self, descricao: str):
-        conn = conectar_banco()
+        conn = conectar_banco("database")
         cursor = conn.cursor()
 
         try: 
@@ -167,11 +167,11 @@ class fornecedor:
             if id:
                 raise ValueError ("Fornecedor cadastrado")
 
-            cursor.execute(f"""
+            cursor.execute("""
                 update tbFornecedor
-			        set dsFornecedor = {descricao}
-			        where NomeFornecedor = {nome}
-                """)
+			        set dsFornecedor = ?
+			        where NomeFornecedor = ?
+                """, (descricao, nome))
             print("Descrição atualizado com sucesso!")
             conn.commit()
             

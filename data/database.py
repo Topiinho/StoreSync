@@ -32,4 +32,4 @@ def criar_banco(nome_loja: str):
             conn.close()
         return None
 
-conectar_banco("database")
+# conectar_banco("database")

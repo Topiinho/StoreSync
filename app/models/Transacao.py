@@ -1,17 +1,17 @@
-from data.database_config import conectar_banco
+from data.database import conectar_banco
 from app.models.Produto import coletar_produto, atualizar_estoque
 
 def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: float, data: str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
         custoUnitario = custoTotal / quantidade
 
-        cursor.execute(f"""
+        cursor.execute("""
             insert into tbCompra(idProduto, idFornecedor, CustoUnitario, Quantidade, CustoTotal, Data)
-	        	values ({idProduto}, {idFornecedor}, {custoUnitario}, {quantidade}, {custoTotal}, {data});
-            """)
+	        	values (?, ?, ?, ?, ?, ?);
+            """, (idProduto, idFornecedor, custoUnitario, quantidade, custoTotal, data))
         
         estoque = (coletar_produto(idProduto, "idProduto", "Estoque"))[0]
         custoMedio = (coletar_produto(idProduto, "idProduto", "CustoMedio"))[0]
@@ -19,12 +19,12 @@ def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: floa
         custoMedio = (custoTotal + (custoMedio * estoque)) / (estoque + quantidade)
         estoque = estoque + quantidade
 
-        cursor.execute(f"""
+        cursor.execute("""
             update tbProduto
-		        set Estoque = {estoque},
-			        CustoMedio = {custoMedio}
-		        where idProduto = {idProduto}
-            """)
+		        set Estoque = ?,
+			        CustoMedio = ?
+		        where idProduto = ?
+            """, (estoque, custoMedio, idProduto))
         
         conn.commit()
         print("Compra realziada com sucesso!")
@@ -38,7 +38,7 @@ def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: floa
         conn.close()
 
 def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try: 
@@ -47,7 +47,7 @@ def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
 
         if estoque < quantidade:
             nome: str = coletar_produto(idProduto, idProduto, "NomeProduto")
-            raise ValueError (f"Não possue estoque insuficiente de: {nome} ")
+            raise ValueError ("Não possue estoque insuficiente de: ? ", (nome))
 
         else:
             custo: float = coletar_produto(idProduto, idProduto, "CustoMedio") * quantidade
@@ -56,10 +56,10 @@ def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
 
             atualizar_estoque(idProduto, estoqueAtual)
 
-            cursor.execute(f"""
+            cursor.execute("""
                 insert into tbVendaProduto (idProduto, Quantidade, ValorCusto, ValorVenda, ValorLucro,Data)
-			        values ({idProduto}, {quantidade}, {custo}, {valorVenda}, {lucro}, {data})
-                """)
+			        values (?, ?, ?, ?, ?, ?)
+                """, (idProduto, quantidade, custo, valorVenda, lucro, data))
 
     except ValueError as e:
         print(e)
@@ -74,14 +74,14 @@ def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
         conn.close()
 
 def consulta (tabela: str,coluna: str, filtro):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
-            SELECT * FROM {tabela}
-                where {coluna} = {filtro}
-            """)
+        cursor.execute("""
+            SELECT * FROM ?
+                where ? = ?
+            """, (tabela, coluna, filtro))
         tabela = cursor.fetchall()
         
         if not tabela:
@@ -101,15 +101,15 @@ def consulta (tabela: str,coluna: str, filtro):
     return tabela
 
 def consulta_venda (colunaDesejada: str,coluna: str, filtro):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute(f"""
-            SELECT {colunaDesejada}
+        cursor.execute("""
+            SELECT ?
             FROM tbVendaProduto
-                where {coluna} = {filtro}
-            """)
+                where ? = ?
+            """, (colunaDesejada, coluna, filtro))
         tabela = cursor.fetchall()
         
         if not tabela:
@@ -129,7 +129,7 @@ def consulta_venda (colunaDesejada: str,coluna: str, filtro):
     return tabela
 
 def faturamento (data: str):
-    conn = conectar_banco()
+    conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
@@ -140,10 +140,10 @@ def faturamento (data: str):
                 valorVenda: float = sum(consulta_venda("ValorVenda","Data", data))
                 valorLucro: float = sum(consulta_venda("ValorLucro","Data", data))
 
-                cursor.execute(f"""
+                cursor.execute("""
                     insert into tbFaturamentoVenda (ValorCusto, ValorVenda, ValorLucro, Data)
-		                values ({valorCusto}, {valorVenda}, {valorLucro}, {data})
-                    """)
+		                values (?, ?, ?, ?)
+                    """, (valorCusto, valorVenda, valorLucro, data))
                 
                 conn.commit()
             
