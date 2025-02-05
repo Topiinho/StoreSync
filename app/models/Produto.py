@@ -55,11 +55,11 @@ def listar_produtos (filtro, coluna :str):
                 print(row)
 
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT * 
                 FROM tbProduto
-                where ? = ?
-                """, (coluna, filtro))
+                where {coluna} = ?
+                """, (filtro, ))
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -72,16 +72,13 @@ def listar_produtos (filtro, coluna :str):
         cursor.close()
         conn.close()
 
-def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
-    conn = conectar_banco("database")
-    cursor = conn.cursor()
-
+def coletar_produto (conn, cursor, filtro :int, coluna: str, coluna_desejada: str):
     try:
-        cursor.execute("""
-            SELECT ?
+        cursor.execute(f"""
+            SELECT {coluna_desejada}
             FROM tbProduto
-            where ? = ?
-            """, (coluna_desejada, coluna, filtro))
+            where {coluna} = ?
+            """, (filtro, ))
         tabela = cursor.fetchall()
         
         if tabela:
@@ -95,32 +92,22 @@ def coletar_produto (filtro :int, coluna: str, coluna_desejada: str):
 
     except Exception as e:
         raise e
-
-    finally:
-        cursor.close()
-        conn.close()
-    
+  
     return i
 
-def atualizar_estoque (idProduto: int, estoque: int):
-    conn = conectar_banco("database")
-    cursor = conn.cursor()
-
+def atualizar_estoque (conn, cursor, idProduto: int, estoque: int):
     try:
         cursor.execute("""
             update  tbProduto
 			set Estoque = ?
 			where idProduto = ?
             """, (estoque, idProduto))
-        conn.commit()
+
+        print("Estoque atualizado")
 
     except Exception as e:
         conn.rollback()
         raise e
-
-    finally:
-        cursor.close()
-        conn.close()
 
 
 

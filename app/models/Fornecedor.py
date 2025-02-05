@@ -52,11 +52,11 @@ def listar_fornecedor (filtro, coluna :str):
                 print(row)
 
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT * 
                 FROM tbFornecedor
-                where ? = ?
-                """, (coluna, filtro))
+                where {coluna} = ?
+                """, (filtro, ))
             tabela = cursor.fetchall()
             
             for row in tabela:
@@ -74,11 +74,11 @@ def coletar_fornecedor (filtro, coluna :str, coluna_desejada :str):
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            SELECT ? 
+        cursor.execute(f"""
+            SELECT {coluna_desejada} 
             FROM tbFornecedor
-            where ? = ?
-            """, (coluna_desejada, coluna, filtro))
+            where {coluna} = ?
+            """, (filtro, ))
         tabela = cursor.fetchone()
         
         if tabela:

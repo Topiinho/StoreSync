@@ -1,3 +1,4 @@
+import time
 from data.database import conectar_banco
 from app.models.Produto import coletar_produto, atualizar_estoque
 
@@ -6,15 +7,15 @@ def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: floa
     cursor = conn.cursor()
 
     try:
-        custoUnitario = custoTotal / quantidade
+        custoUnitario: float = custoTotal / quantidade
 
         cursor.execute("""
             insert into tbCompra(idProduto, idFornecedor, CustoUnitario, Quantidade, CustoTotal, Data)
 	        	values (?, ?, ?, ?, ?, ?);
             """, (idProduto, idFornecedor, custoUnitario, quantidade, custoTotal, data))
         
-        estoque = (coletar_produto(idProduto, "idProduto", "Estoque"))[0]
-        custoMedio = (coletar_produto(idProduto, "idProduto", "CustoMedio"))[0]
+        estoque: int = (coletar_produto(conn, cursor, idProduto, "idProduto", "Estoque"))[0]
+        custoMedio: float = (coletar_produto(conn, cursor, idProduto, "idProduto", "CustoMedio"))[0]
 
         custoMedio = (custoTotal + (custoMedio * estoque)) / (estoque + quantidade)
         estoque = estoque + quantidade
@@ -37,29 +38,26 @@ def compra (idFornecedor: int, idProduto: int, quantidade: int, custoTotal: floa
         cursor.close()
         conn.close()
 
-def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
-    conn = conectar_banco("database")
-    cursor = conn.cursor()
-
+def venda_produto (conn, cursor, idVenda: int,idProduto: int, quantidade: int, valorVenda: float, data: str):
     try: 
-        estoque: int = coletar_produto(idProduto, idProduto, "Estoque")
+        estoque: int = coletar_produto(conn, cursor, idProduto, "idProduto", "Estoque")[0]
         
 
         if estoque < quantidade:
-            nome: str = coletar_produto(idProduto, idProduto, "NomeProduto")
-            raise ValueError ("Não possue estoque insuficiente de: ? ", (nome))
+            nome: str = coletar_produto(conn, cursor, idProduto, "idProduto", "NomeProduto")
+            raise ValueError (f"Não possue estoque suficiente de: {nome} ")
 
         else:
-            custo: float = coletar_produto(idProduto, idProduto, "CustoMedio") * quantidade
+            custo: float = coletar_produto(conn, cursor, idProduto, "idProduto", "CustoMedio")[0] * quantidade
             lucro: float = valorVenda - custo
             estoqueAtual: int = estoque - quantidade
 
-            atualizar_estoque(idProduto, estoqueAtual)
+            atualizar_estoque(conn, cursor, idProduto, estoqueAtual)
 
             cursor.execute("""
-                insert into tbVendaProduto (idProduto, Quantidade, ValorCusto, ValorVenda, ValorLucro,Data)
-			        values (?, ?, ?, ?, ?, ?)
-                """, (idProduto, quantidade, custo, valorVenda, lucro, data))
+                insert into tbVendaProduto (idVenda, idProduto, Quantidade, ValorCusto, ValorVenda, ValorLucro, Data)
+			        values (?, ?, ?, ?, ?, ?, ?)
+                """, (idVenda, idProduto, quantidade, custo, valorVenda, lucro, data))
 
     except ValueError as e:
         print(e)
@@ -69,47 +67,70 @@ def venda (idProduto: int, quantidade: int, valorVenda: float, data: str):
         conn.rollback()
         raise e
 
-    finally:
-        cursor.close()
-        conn.close()
-
-def consulta (tabela: str,coluna: str, filtro):
+def venda (vendas: list, data: str):
     conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            SELECT * FROM ?
-                where ? = ?
-            """, (tabela, coluna, filtro))
-        tabela = cursor.fetchall()
+        ValorCustoTotal: float = 0
+        ValorVendaTotal: float = 0
+
+        for produto in vendas:
+            idProduto, quantidade, valorVenda = produto
+            print(idProduto, quantidade, valorVenda)
+
+            estoque: int = coletar_produto(conn, cursor, idProduto, "idProduto", "Estoque")[0]
+            if estoque < quantidade:
+                nome: str = coletar_produto(conn, cursor, idProduto, "idProduto", "NomeProduto")[0]
+                raise ValueError (f"Não possue estoque suficiente de: {nome} ")
+
+            custo: float = coletar_produto(conn, cursor, idProduto, "idProduto", "CustoMedio")[0] * quantidade
+            print(custo, quantidade, coletar_produto(conn, cursor, idProduto, "idProduto", "CustoMedio")[0])
+
+            ValorCustoTotal += (custo)
+            ValorVendaTotal += valorVenda
+            print(ValorCustoTotal, ValorVendaTotal)
+            print("----------------")
+
+            del estoque, custo
         
-        if not tabela:
-            raise ValueError ("Não foi encontrado vendas com base no filtro passado!")
+        ValorLucroTotal: float = ValorVendaTotal - ValorCustoTotal
+
+        cursor.execute("""
+            INSERT INTO tbVenda (ValorCustoTotal, ValorVendaTotal, ValorLucroTotal, Data)
+                VALUES (?, ?, ?, ?)
+            """, (ValorCustoTotal, ValorVendaTotal, ValorLucroTotal, data))
+        
+        idVenda = cursor.lastrowid
+
+        for produto in vendas:
+            idProduto, quantidade, valorVenda = produto
+            venda_produto(conn, cursor, idVenda, idProduto, quantidade, valorVenda, data)
+
+        conn.commit()
+        print("Vendas registradas com sucesso!")
 
     except ValueError as e:
         print(e)
         return None
-
+    
     except Exception as e:
         raise e
 
     finally:
         cursor.close()
         conn.close()
-    
-    return tabela
 
 def consulta_venda (colunaDesejada: str,coluna: str, filtro):
     conn = conectar_banco("database")
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            SELECT ?
+        cursor.execute(f"""
+            SELECT {colunaDesejada}
             FROM tbVendaProduto
-                where ? = ?
-            """, (colunaDesejada, coluna, filtro))
+                where {coluna} = ?
+            """, (filtro, ))
         tabela = cursor.fetchall()
         
         if not tabela:
@@ -133,12 +154,40 @@ def faturamento (data: str):
     cursor = conn.cursor()
 
     try:
-        if consulta("tbVendaProduto","Data", data):
-            if not consulta("tbFaturamentoVenda", "Data", data):
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT 1 
+                FROM tbVendaProduto 
+                WHERE SUBSTR(Data, 1, 10) = ? -- Extrai "DD/MM/YYYY"
+            )
+        """, (data,))  # data deve ser "DD/MM/YYYY"
+        existe_venda = cursor.fetchone()[0]
+        print(existe_venda)
 
-                valorCusto: float = sum(consulta_venda("ValorCusto","Data", data))
-                valorVenda: float = sum(consulta_venda("ValorVenda","Data", data))
-                valorLucro: float = sum(consulta_venda("ValorLucro","Data", data))
+        if existe_venda:
+
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 
+                    FROM tbFaturamentoVenda 
+                    WHERE SUBSTR(Data, 1, 10) = ?
+                )
+            """, (data,))
+            existe_faturamento = cursor.fetchone()[0]
+            
+            if not existe_faturamento:
+
+                cursor.execute("""
+                    SELECT 
+                        SUM(ValorCusto), 
+                        SUM(ValorVenda), 
+                        SUM(ValorLucro) 
+                    FROM tbVendaProduto 
+                    WHERE SUBSTR(Data, 1, 10) = ?
+                """, (data,))
+                valores = cursor.fetchone()
+                
+                valorCusto, valorVenda, valorLucro = valores
 
                 cursor.execute("""
                     insert into tbFaturamentoVenda (ValorCusto, ValorVenda, ValorLucro, Data)
