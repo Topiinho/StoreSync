@@ -1,4 +1,4 @@
-# Sistema de controle de lojas
+# StoreSync
 
 ## Sobre o projeto
 Este programa serve para gerenciar a compra e venda de produtos
