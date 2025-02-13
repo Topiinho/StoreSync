@@ -1,18 +1,20 @@
 import flet as ft
 from menuSideBar import create_sidebar
+from menuProdutos import creat_product_menu
 
 def main(page: ft.Page):
-    page.bgcolor = ft.colors.GREY_800
+    page.bgcolor = "#7c7c7c"
 
     sidebar, toggle_sidebar = create_sidebar(page)
+    productMenu = creat_product_menu(page)
 
-    layout = ft.Container(
-        content=ft.Row(
-            controls=[
-                sidebar,
-                ft.Container(expand=True, bgcolor=ft.colors.GREY_700),
-            ]
-        )
+    layout = ft.Row(
+        controls=[
+            sidebar,
+            productMenu,
+        ],
+        expand=True,
+
     )
 
     sidebar.on_hover = toggle_sidebar

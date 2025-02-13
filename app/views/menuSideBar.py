@@ -49,15 +49,16 @@ def create_sidebar(page):
         content=ft.Row(
             controls=[
                 ft.Icon(ft.icons.SETTINGS),
-                ft.Text("Configuração", visible=False)
+                ft.Text("Configuração", visible=False),
             ]
         ),
-        on_click=toggle_sidebar
+        on_click=...
     )
 
     sidebar = ft.Container(
+        margin=0,
         width=70,
-        bgcolor=ft.colors.BLUE_GREY_900,
+        bgcolor= "#315c77" ,
         border_radius=ft.BorderRadius(top_left=0, top_right=20, bottom_left=0, bottom_right=20),
         padding=10,
         content=ft.Column(
@@ -71,14 +72,19 @@ def create_sidebar(page):
                     alignment=ft.alignment.top_center
                 ),
 
+
                 ft.Divider(),
+
 
                 ft.Column(
                     controls=menu_buttons,
                     alignment=ft.MainAxisAlignment.CENTER
                 ),
 
+                ft.Container(),
+
                 ft.Divider(),
+
 
                 config_button
             ]
