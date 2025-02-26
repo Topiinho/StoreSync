@@ -19,24 +19,28 @@ def create_sidebar(page):
                 ft.Text("Menu Inicial", visible=False)
             ])
         ),
+
         ft.ElevatedButton(
             content=ft.Row([
                 ft.Icon(ft.icons.SHOPPING_CART),
                 ft.Text("Produtos", visible=False)
             ])
         ),
+
         ft.ElevatedButton(
             content=ft.Row([
                 ft.Icon(ft.icons.MONETIZATION_ON),
                 ft.Text("Vendas", visible=False)
             ])
         ),
+
         ft.ElevatedButton(
             content=ft.Row([
                 ft.Icon(ft.icons.RECEIPT_LONG),
                 ft.Text("Compras", visible=False)
             ])
         ),
+
         ft.ElevatedButton(
             content=ft.Row([
                 ft.Icon(ft.icons.SUPPORT_AGENT),
@@ -75,13 +79,12 @@ def create_sidebar(page):
 
                 ft.Divider(),
 
-
                 ft.Column(
                     controls=menu_buttons,
                     alignment=ft.MainAxisAlignment.CENTER
                 ),
 
-                ft.Container(),
+                ft.Container(expand=True),
 
                 ft.Divider(),
 
