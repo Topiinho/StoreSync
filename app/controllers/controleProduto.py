@@ -16,3 +16,8 @@ def productList():
 
     # Convertendo para lista de tuplas
     return df_filtrado.to_records(index=False).tolist()
+
+def novoCadastro(nome: str, modelo: str, custo: float, estoque: int, tags: str, descricao: str):
+    print(f"Novo produto cadastrado: {nome} - {modelo} - {custo} - {estoque} - {tags} - {descricao}")
+    # cadastrar_produto(nome, modelo, custo, estoque, tags, descricao)
+    return True
