@@ -51,8 +51,7 @@ def listar_produtos (filtro, coluna :str):
                 """)
             tabela = cursor.fetchall()
 
-            for row in tabela:
-                print(row)
+            return tabela
 
         else:
             cursor.execute(f"""
@@ -62,8 +61,7 @@ def listar_produtos (filtro, coluna :str):
                 """, (filtro, ))
             tabela = cursor.fetchall()
             
-            for row in tabela:
-                print(row)
+            return tabela
 
     except Exception as e:
         raise e

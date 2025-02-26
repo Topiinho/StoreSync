@@ -45,4 +45,24 @@
 
 # faturamento(data2)
 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+from app.controllers.controleProduto import productList
+
+df_retorno = productList()
+print(df_retorno)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # CTRL + / para comentar uma linha
