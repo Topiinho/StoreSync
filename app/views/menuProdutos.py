@@ -21,10 +21,10 @@ def create_product_menu(page):
 
     def create_new_card():
         global is_creating
-        if is_creating:  # Se já existe um card de criação, impede a criação de outro
+        if is_creating:
             return
 
-        is_creating = True  # Bloqueia novas criações
+        is_creating = True
 
         image_picker = ft.FilePicker(on_result=lambda e: update_image(e, image_display))
         page.overlay.append(image_picker)
@@ -47,16 +47,70 @@ def create_product_menu(page):
                 page.update()
 
         def confirmar_novo_produto(e):
-            global is_creating
-            novoCadastro(
-                nome_field.value,
-                modelo_field.value,
-                float(custo_field.value) if custo_field.value else 0.0,
-                int(estoque_field.value) if estoque_field.value else 0,
-                tags_field.value,
-                descricao_field.value
-            )
-            remove_product_card(new_card)
+            page = e.page  # Pegando a referência da página
+
+            if not nome_field.value.strip() or not modelo_field.value.strip() or not custo_field.value.strip() or not estoque_field.value.strip():
+                erro_dialog = ft.AlertDialog(
+                    title=ft.Text("Erro"),
+                    content=ft.Text("Todos os campos obrigatórios devem ser preenchidos."),
+                    actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
+                )
+                page.overlay.append(erro_dialog)  # Adiciona o pop-up corretamente
+                erro_dialog.open = True
+                page.update()
+                return
+
+            try:
+                custo = float(custo_field.value)
+                estoque = int(estoque_field.value)
+            except ValueError:
+                erro_dialog = ft.AlertDialog(
+                    title=ft.Text("Erro"),
+                    content=ft.Text("Custo deve ser um número decimal e Estoque deve ser um número inteiro."),
+                    actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
+                )
+                page.overlay.append(erro_dialog)
+                erro_dialog.open = True
+                page.update()
+                return
+
+            try:
+                novoCadastro(
+                    nome_field.value.strip(),
+                    modelo_field.value.strip(),
+                    custo,
+                    estoque,
+                    tags_field.value.strip(),
+                    descricao_field.value.strip()
+                )
+
+                sucesso_dialog = ft.AlertDialog(
+                    title=ft.Text("Sucesso"),
+                    content=ft.Text("Produto cadastrado com sucesso!"),
+                    actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(sucesso_dialog, page))],
+                )
+                page.overlay.append(sucesso_dialog)
+                sucesso_dialog.open = True
+                page.update()
+
+                remove_product_card(new_card)  # Remove o card de criação após sucesso
+
+            except Exception as error:
+                erro_dialog = ft.AlertDialog(
+                    title=ft.Text("Erro"),
+                    content=ft.Text(f"Ocorreu um erro: {error}"),
+                    actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
+                )
+                page.overlay.append(erro_dialog)
+                erro_dialog.open = True
+                page.update()
+
+        # Função auxiliar para fechar o pop-up
+        def fechar_dialog(dialog, page):
+            dialog.open = False
+            page.update()
+
+
 
         new_card = ft.Container(
             padding=10,
@@ -95,7 +149,7 @@ def create_product_menu(page):
                         ft.Text(f"Estoque: {estoque}", size=15, color=ft.colors.WHITE)
                     ])
                 ], expand=True),
-                ft.IconButton(icon=ft.icons.EDIT, icon_color=ft.colors.BLUE)
+                ft.IconButton(icon=ft.icons.EDIT, icon_color=ft.colors.BLUE)  # Agora está azul
             ])
         )
 
@@ -156,6 +210,7 @@ def main(page: ft.Page):
     productMenu = create_product_menu(page)
 
     page.add(productMenu)
+    page.update()
 
 
 ft.app(target=main, assets_dir="assets")

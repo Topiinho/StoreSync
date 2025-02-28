@@ -1,5 +1,5 @@
 import pandas as pd
-from app.models.Produto import listar_produtos
+from app.models.Produto import listar_produtos, cadastrar_produto
 
 def productList():
     tabela = listar_produtos("Todos", "")
@@ -14,10 +14,15 @@ def productList():
     # Filtrando apenas as colunas desejadas
     df_filtrado = df[["nome", "modelo", "custo", "estoque", "descricao"]]
 
+    # Ordenando alfabeticamente pelo nome
+    df_filtrado = df_filtrado.sort_values(by="nome")
+
     # Convertendo para lista de tuplas
     return df_filtrado.to_records(index=False).tolist()
 
 def novoCadastro(nome: str, modelo: str, custo: float, estoque: int, tags: str, descricao: str):
-    print(f"Novo produto cadastrado: {nome} - {modelo} - {custo} - {estoque} - {tags} - {descricao}")
-    # cadastrar_produto(nome, modelo, custo, estoque, tags, descricao)
-    return True
+    try:
+        cadastrar_produto(nome, modelo, custo, estoque, tags, descricao)
+    except Exception as e:
+        raise e
+   

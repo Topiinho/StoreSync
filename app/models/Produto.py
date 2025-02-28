@@ -70,7 +70,7 @@ def listar_produtos (filtro, coluna :str):
         cursor.close()
         conn.close()
 
-def coletar_produto (conn, cursor, filtro :int, coluna: str, coluna_desejada: str):
+def coletar_produto (cursor, filtro :int, coluna: str, coluna_desejada: str):
     try:
         cursor.execute(f"""
             SELECT {coluna_desejada}
