@@ -34,12 +34,12 @@ def create_product_menu(page):
             height=120, width=120, border_radius=20
         )
 
-        nome_field = ft.TextField(label="Nome do Produto", bgcolor=ft.colors.GREY_700)
-        modelo_field = ft.TextField(label="Modelo", bgcolor=ft.colors.GREY_700)
-        custo_field = ft.TextField(label="Custo", bgcolor=ft.colors.GREY_700)
-        estoque_field = ft.TextField(label="Estoque", bgcolor=ft.colors.GREY_700)
-        tags_field = ft.TextField(label="Tags (Opcional)", bgcolor=ft.colors.GREY_700)
-        descricao_field = ft.TextField(label="Descrição (Opcional)", multiline=True, bgcolor=ft.colors.GREY_700)
+        nome_field = ft.TextField(label="Nome do Produto", bgcolor=ft.Colors.GREY_700)
+        modelo_field = ft.TextField(label="Modelo", bgcolor=ft.Colors.GREY_700)
+        custo_field = ft.TextField(label="Custo", bgcolor=ft.Colors.GREY_700)
+        estoque_field = ft.TextField(label="Estoque", bgcolor=ft.Colors.GREY_700)
+        tags_field = ft.TextField(label="Tags (Opcional)", bgcolor=ft.Colors.GREY_700)
+        descricao_field = ft.TextField(label="Descrição (Opcional)", multiline=True, bgcolor=ft.Colors.GREY_700)
 
         def update_image(e, img_display):
             if e.files:
@@ -114,7 +114,7 @@ def create_product_menu(page):
 
         new_card = ft.Container(
             padding=10,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             border_radius=30,
             height=180,
             content=ft.Row(controls=[
@@ -124,8 +124,8 @@ def create_product_menu(page):
                     ft.Row([custo_field, estoque_field]),
                     tags_field, descricao_field
                 ], expand=True),
-                ft.IconButton(icon=ft.icons.DELETE, icon_color=ft.colors.RED, on_click=lambda _: remove_product_card(new_card)),
-                ft.IconButton(icon=ft.icons.CHECK, icon_color=ft.colors.GREEN, on_click=confirmar_novo_produto)
+                ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: remove_product_card(new_card)),
+                ft.IconButton(icon=ft.Icons.CHECK, icon_color=ft.Colors.GREEN, on_click=confirmar_novo_produto)
             ])
         )
 
@@ -136,20 +136,20 @@ def create_product_menu(page):
     def create_product_card(nome, modelo, custo, estoque, descricao):
         return ft.Container(
             padding=10,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             border_radius=30,
             height=150,
             content=ft.Row(controls=[
                 ft.Image(src="app/views/Prototipo de telas/Sem título.png", height=120, width=120, border_radius=20),
                 ft.Column(controls=[
-                    ft.Text(nome, size=20, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
-                    ft.Text(f"Modelo: {modelo}", size=15, color=ft.colors.WHITE),
+                    ft.Text(nome, size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ft.Text(f"Modelo: {modelo}", size=15, color=ft.Colors.WHITE),
                     ft.Row([
-                        ft.Text(f"Custo: R$ {custo:.2f}", size=15, color=ft.colors.WHITE),
-                        ft.Text(f"Estoque: {estoque}", size=15, color=ft.colors.WHITE)
+                        ft.Text(f"Custo: R$ {custo:.2f}", size=15, color=ft.Colors.WHITE),
+                        ft.Text(f"Estoque: {estoque}", size=15, color=ft.Colors.WHITE)
                     ])
                 ], expand=True),
-                ft.IconButton(icon=ft.icons.EDIT, icon_color=ft.colors.BLUE)  # Agora está azul
+                ft.IconButton(icon=ft.Icons.EDIT, icon_color=ft.Colors.BLUE)  # Agora está azul
             ])
         )
 
@@ -178,7 +178,7 @@ def create_product_menu(page):
                 ),
                 ft.ElevatedButton("Buscar", height=50, width=75),
                 ft.Container(expand=True),
-                ft.IconButton(icon=ft.icons.REFRESH),
+                ft.IconButton(icon=ft.Icons.REFRESH),
                 ft.ElevatedButton(
                     "Novo Cadastro",
                     bgcolor=ft.Colors.GREEN_500,
