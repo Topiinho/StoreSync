@@ -16,11 +16,13 @@ def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, 
         if tabela :
             cursor.execute("""
                 update tbProduto
-	    	    	set Foto = ?
+	    	    	set Foto = ?,
+                        custoMedio = ?,
+                        Estoque = ?
 	    	    	where NomeProduto = ?
 	    	    		and Modelo = ?
-                """, (foto))
-            print("Foto do produto atualizado com sucesso!")
+                """, (foto, custoMedio, estoque, nome, modelo))
+            print("Produto atualizado com sucesso!")
 
         else:
             cursor.execute("""
@@ -59,7 +61,6 @@ def listar_produtos (filtro, coluna :str):
                 where {coluna} = ?
                 """, (filtro, ))
             tabela = cursor.fetchall()
-            print("Tabela filtrada:", tabela)  # Verifique o conteúdo da tabela filtrada
             return tabela
 
     except Exception as e:

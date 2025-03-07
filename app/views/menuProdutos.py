@@ -116,7 +116,7 @@ def create_product_menu(page):
             def fechar_dialog(dialog, page):
                 dialog.open = False
                 page.update()
-                list_products()
+                list_products("Todos")
 
             new_card = ft.Container(
                 padding=10,
@@ -158,23 +158,28 @@ def create_product_menu(page):
                 ])
             )
 
-        def list_products():
+        def list_products(filtro):
             global is_creating
             if is_creating:
+                product_cards.clear()
+                product_list.content.controls.clear()
+                is_creating = False
+                list_products(filtro)
                 return
 
             product_cards.clear()
             product_list.content.controls.clear()
 
-            product_list_data = productList()
+            product_list_data = productList(filtro)
             for produto in product_list_data:
                 product_card = create_product_card(*produto)
                 product_cards.append(product_card)
 
             product_list.content.controls.extend(product_cards)
+            campoPesquisa.value = ""
             page.update()
             
-        product_list_data = productList()
+        product_list_data = productList("Todos")
         for produto in product_list_data:
             product_card = create_product_card(*produto)
             product_cards.append(product_card)
@@ -186,16 +191,18 @@ def create_product_menu(page):
             content=ft.Column(controls=product_cards, scroll="auto", expand=True)
         )
 
+        campoPesquisa = ft.TextField(label="Pesquisar", hint_text="Digite sua busca...", border_radius=30)
+
         top_bar = ft.Container(
             padding=10,
             bgcolor=ft.Colors.GREY_800,
             border_radius=30,
             content=ft.Row(
                 controls=[  
-                    ft.TextField(label="Pesquisar", hint_text="Digite sua busca...", border_radius=30),
-                    ft.ElevatedButton("Buscar", height=50, width=75),
+                    campoPesquisa,
+                    ft.ElevatedButton("Buscar", height=50, width=75, on_click=lambda _: list_products(campoPesquisa.value.strip())),
                     ft.Container(expand=True),
-                    ft.IconButton(icon=ft.Icons.REFRESH, on_click=lambda _: list_products()),
+                    ft.IconButton(icon=ft.Icons.REFRESH, on_click=lambda _: list_products("Todos")),
                     ft.ElevatedButton(
                         "Novo Cadastro",
                         bgcolor=ft.Colors.GREEN_500,

@@ -25,23 +25,44 @@ def blob_to_temp_file(blob, temp_files):
     except Exception as e:
         raise e
 
-def productList():
+def productList(filtro):
     try:
-        tabela = listar_produtos("Todos", "")
-        df = pd.DataFrame(tabela, columns=["id", "nome", "modelo", "custo", "estoque", "blob"])
-        df["modelo"] = df["modelo"].fillna("Único")
+        if filtro == "Todos":
+            tabela = listar_produtos("Todos", "")
+            df = pd.DataFrame(tabela, columns=["id", "nome", "modelo", "custo", "estoque", "blob"])
+            df["modelo"] = df["modelo"].fillna("Único")
 
-        # Lista para armazenar os caminhos dos arquivos temporários
-        temp_files = []
+            # Lista para armazenar os caminhos dos arquivos temporários
+            temp_files = []
 
-        # Converte o blob em arquivos temporários e armazena o caminho
-        df["foto"] = df["blob"].apply(lambda blob: blob_to_temp_file(blob, temp_files))
+            # Converte o blob em arquivos temporários e armazena o caminho
+            df["foto"] = df["blob"].apply(lambda blob: blob_to_temp_file(blob, temp_files))
 
-        df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
+            df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
 
-        limpar_temp_arquivos(temp_files)
+            limpar_temp_arquivos(temp_files)
 
-        return df_filtrado.to_records(index=False).tolist()
+            return df_filtrado.to_records(index=False).tolist()
+        
+        elif filtro == "" or filtro == None:
+            return productList("Todos")
+        
+        else:
+            tabela = listar_produtos(filtro, "NomeProduto")
+            df = pd.DataFrame(tabela, columns=["id", "nome", "modelo", "custo", "estoque", "blob"])
+            df["modelo"] = df["modelo"].fillna("Único")
+
+            # Lista para armazenar os caminhos dos arquivos temporários
+            temp_files = []
+
+            # Converte o blob em arquivos temporários e armazena o caminho
+            df["foto"] = df["blob"].apply(lambda blob: blob_to_temp_file(blob, temp_files))
+
+            df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
+
+            limpar_temp_arquivos(temp_files)
+
+            return df_filtrado.to_records(index=False).tolist()
 
     except Exception as e:
         raise e
