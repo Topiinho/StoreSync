@@ -8,7 +8,7 @@ from app.controllers.controleProduto import productList, novoCadastro
 
 is_creating = False  # Variável de controle
 
-Unknown = "app/views/assets/Unknown_Icon.png"
+Undefined = "app/views/assets/Undefined_Icon.png"
 
 def create_product_menu(page):
     global is_creating  
@@ -16,7 +16,7 @@ def create_product_menu(page):
 
     try:
         # Defina a variável image_display antes de usá-la
-        image_display = ft.Image(src=Unknown, height=120, width=120, border_radius=20)
+        image_display = ft.Image(src=Undefined, height=120, width=120, border_radius=20)
 
         def on_file_selected(e):
             if e.files and image_display:
@@ -100,7 +100,7 @@ def create_product_menu(page):
 
                     remove_product_card(new_card)  # Remove o card de criação após sucesso
 
-                    image_display.src = Unknown  # Reseta a imagem para a padrão
+                    image_display.src = Undefined  # Reseta a imagem para a padrão
 
                 except Exception as error:
                     erro_dialog = ft.AlertDialog(
@@ -116,6 +116,7 @@ def create_product_menu(page):
             def fechar_dialog(dialog, page):
                 dialog.open = False
                 page.update()
+                list_products()
 
             new_card = ft.Container(
                 padding=10,
@@ -138,14 +139,13 @@ def create_product_menu(page):
             page.update()
 
         def create_product_card(nome, modelo, custo, estoque, foto):
-            print(f"Nome: {nome}, Modelo: {modelo}, Custo: {custo}, Estoque: {estoque}, Foto: {foto}") # Debug
             return ft.Container(
                 padding=10,
                 bgcolor=ft.Colors.GREY_800,
                 border_radius=30,
                 height=150,
                 content=ft.Row(controls=[  
-                    ft.Image(src=f"data:image/png;base64,{foto}", height=120, width=120, border_radius=20),
+                    ft.Image(src=foto, height=120, width=120, border_radius=20),
                     ft.Column(controls=[  
                         ft.Text(nome, size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                         ft.Text(f"Modelo: {modelo}", size=15, color=ft.Colors.WHITE),
@@ -158,10 +158,27 @@ def create_product_menu(page):
                 ])
             )
 
+        def list_products():
+            global is_creating
+            if is_creating:
+                return
+
+            product_cards.clear()
+            product_list.content.controls.clear()
+
+            product_list_data = productList()
+            for produto in product_list_data:
+                product_card = create_product_card(*produto)
+                product_cards.append(product_card)
+
+            product_list.content.controls.extend(product_cards)
+            page.update()
+            
         product_list_data = productList()
         for produto in product_list_data:
             product_card = create_product_card(*produto)
             product_cards.append(product_card)
+
 
         product_list = ft.Container(
             padding=10,
@@ -178,7 +195,7 @@ def create_product_menu(page):
                     ft.TextField(label="Pesquisar", hint_text="Digite sua busca...", border_radius=30),
                     ft.ElevatedButton("Buscar", height=50, width=75),
                     ft.Container(expand=True),
-                    ft.IconButton(icon=ft.Icons.REFRESH),
+                    ft.IconButton(icon=ft.Icons.REFRESH, on_click=lambda _: list_products()),
                     ft.ElevatedButton(
                         "Novo Cadastro",
                         bgcolor=ft.Colors.GREEN_500,
@@ -198,6 +215,7 @@ def create_product_menu(page):
         )
 
         return product_menu
+    
     except Exception as e:
         raise e
 
