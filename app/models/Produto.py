@@ -1,6 +1,6 @@
 from data.database import conectar_banco
 
-def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, tags :str, descricao :str):
+def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, foto :str):
     conn = conectar_banco("database")
     cursor = conn.cursor()
 
@@ -16,18 +16,17 @@ def cadastrar_produto (nome :str, modelo :str, custoMedio :float, estoque :int, 
         if tabela :
             cursor.execute("""
                 update tbProduto
-	    	    	set Descricao = ?,
-                        Tags = ?
+	    	    	set Foto = ?
 	    	    	where NomeProduto = ?
 	    	    		and Modelo = ?
-                """, (descricao, tags, nome, modelo))
-            print("Descrição do produto atualizado com sucesso!")
+                """, (foto))
+            print("Foto do produto atualizado com sucesso!")
 
         else:
             cursor.execute("""
-                insert into tbProduto (NomeProduto, Modelo, Tags, CustoMedio, Estoque, Descricao)
-	    	        values (?,?,?,?,?,?)
-                """, (nome, modelo,tags, custoMedio, estoque, descricao))
+                insert into tbProduto (NomeProduto, Modelo, CustoMedio, Estoque, Foto)
+	    	        values (?,?,?,?,?)
+                """, (nome, modelo, custoMedio, estoque, foto))
             print("Produto cadastro com sucesso!")
         
         conn.commit()
@@ -60,7 +59,7 @@ def listar_produtos (filtro, coluna :str):
                 where {coluna} = ?
                 """, (filtro, ))
             tabela = cursor.fetchall()
-            
+            print("Tabela filtrada:", tabela)  # Verifique o conteúdo da tabela filtrada
             return tabela
 
     except Exception as e:
