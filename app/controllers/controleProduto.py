@@ -92,4 +92,3 @@ def novoCadastro(nome: str, modelo: str, custo: float, estoque: int, foto: str):
         cadastrar_produto(nome, modelo, custo, estoque, blob)
     except Exception as e:
         raise e
-   
