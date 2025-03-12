@@ -30,10 +30,10 @@ class Product_Control:
             return None
 
 
-    def product_List(filtro):
+    def product_List(filtro: str):
         try:
             # Verifica se o filtro é "Todos"
-            if filtro == "Todos" or filtro == None or filtro == "":    
+            if filtro.lower() == "todos" or filtro == None or filtro == "":    
                 ids = Product_Service.listar_produtos_id()
                 produtos_lista = []
 
@@ -60,31 +60,28 @@ class Product_Control:
             # Verifica se o filtro é um nome de produto
             else:
                 ids = Product_Service.listar_produtos_id()
-                produto_desejado = None
-                while produto_desejado == None:
-                    for id in ids:
-                        produto = Produto(id)
-                        if produto.Nome == filtro:
-                            produto_desejado = produto
-                            break
-                
-                if produto_desejado == None:
-                    return None
-                else:
-                    df = pd.DataFrame([{
-                        "id": produto.Id,
-                        "nome": produto.Nome,
-                        "modelo": produto.Modelo,
-                        "custo": produto.CustoMedio,
-                        "estoque": produto.Estoque,
-                        "blob": produto.Foto
-                    }])
-
+                produtos_lista = []
+                for id in ids:
+                    produto = Produto(id)
+                    produto_nome_clean = produto.Nome.strip().lower()
+                    # Verifica se o filtro está contido no nome do produto
+                    if filtro.lower() in produto_nome_clean:
+                        produtos_lista.append({
+                            "id": produto.Id,
+                            "nome": produto.Nome,
+                            "modelo": produto.Modelo,
+                            "custo": produto.CustoMedio,
+                            "estoque": produto.Estoque,
+                            "blob": produto.Foto
+                        })
+                if produtos_lista:
+                    df = pd.DataFrame(produtos_lista)
                     df["foto"] = df["blob"].apply(lambda blob: Product_Control.blob_to_temp_file(blob))
-
-                    df_filtrado = df[["id", "nome", "modelo", "custo", "estoque", "foto"]]
+                    df_filtrado = df[["id", "nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
                     return df_filtrado.to_records(index=False).tolist()
-                
+                else:
+                    return []
+
         except Exception as e:
             raise e
 
