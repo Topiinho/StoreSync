@@ -64,7 +64,7 @@ class Product_Control:
                 while produto_desejado == None:
                     for id in ids:
                         produto = Produto(id)
-                        if produto.nome == filtro:
+                        if produto.Nome == filtro:
                             produto_desejado = produto
                             break
                 
@@ -72,17 +72,17 @@ class Product_Control:
                     return None
                 else:
                     df = pd.DataFrame([{
-                        "id": produto.id,
-                        "nome": produto.nome,
-                        "modelo": produto.modelo,
-                        "custo": produto.custo,
-                        "estoque": produto.estoque,
-                        "blob": produto.blob
+                        "id": produto.Id,
+                        "nome": produto.Nome,
+                        "modelo": produto.Modelo,
+                        "custo": produto.CustoMedio,
+                        "estoque": produto.Estoque,
+                        "blob": produto.Foto
                     }])
 
                     df["foto"] = df["blob"].apply(lambda blob: Product_Control.blob_to_temp_file(blob))
 
-                    df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]]
+                    df_filtrado = df[["id", "nome", "modelo", "custo", "estoque", "foto"]]
                     return df_filtrado.to_records(index=False).tolist()
                 
         except Exception as e:

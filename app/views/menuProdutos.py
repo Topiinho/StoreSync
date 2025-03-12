@@ -6,358 +6,241 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from app.controllers.controleProduto import Product_Control
 
-is_creating = False  # Variável de controle
+UNDEFINED_IMAGE = "app/views/assets/Undefined_Icon.png"
 
-Undefined = "app/views/assets/Undefined_Icon.png"
+class ProductMenu:
+    def __init__(self, page, file_picker):
+        self.page = page
+        self.file_picker = file_picker
+        self.is_creating = False
+        self.current_image_display = None
+        self.product_cards = []
 
-def create_product_menu(page):
-    global is_creating  
-    product_cards = []
+        # Configurar file picker
+        self.file_picker.on_result = self.on_file_selected
 
-    try:
-        # Defina a variável image_display antes de usá-la
-        image_display = ft.Image(src=Undefined, height=120, width=120, border_radius=20)
+    def on_file_selected(self, e):
+        if e.files and self.current_image_display:
+            self.current_image_display.src = e.files[0].path
+            self.page.update()
 
-        def on_file_selected(e):
-            if e.files and image_display:
-                image_display.src = e.files[0].path
-                page.update()
-
-        file_picker = ft.FilePicker(on_result=on_file_selected)
-
-        page.add(file_picker)
-
-        def remove_product_card(card):
-            global is_creating
-            product_cards.remove(card)
-            product_list.content.controls.remove(card)
-            is_creating = False  # Libera a criação de um novo card
-            page.update()
-
-        def create_new_card():
-            global is_creating
-            if is_creating:
-                return
-
-            is_creating = True
-
-            # Criação do card com image_display já acessível
-            image_container = ft.Container(
-                content=image_display,
-                on_click=lambda e: file_picker.pick_files()
-            )
-
-            nome_field = ft.TextField(label="Nome do Produto", bgcolor=ft.Colors.GREY_700)
-            modelo_field = ft.TextField(label="Modelo", bgcolor=ft.Colors.GREY_700)
-            custo_field = ft.TextField(label="Custo", bgcolor=ft.Colors.GREY_700)
-            estoque_field = ft.TextField(label="Estoque", bgcolor=ft.Colors.GREY_700)
-
-            def confirmar_novo_produto(e):
-                page = e.page  # Pegando a referência da página
-
-                if not nome_field.value.strip() or not modelo_field.value.strip() or not custo_field.value.strip() or not estoque_field.value.strip():
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text("Todos os campos obrigatórios devem ser preenchidos."),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)  # Adiciona o pop-up corretamente
-                    erro_dialog.open = True
-                    page.update()
-                    return
-
-                try:
-                    custo = float(custo_field.value)
-                    estoque = int(estoque_field.value)
-                except ValueError:
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text("Custo deve ser um número decimal e Estoque deve ser um número inteiro."),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)
-                    erro_dialog.open = True
-                    page.update()
-                    return
-
-                try:
-                    Product_Control.novo_Cadastro(
-                        nome_field.value.strip(),
-                        modelo_field.value.strip(),
-                        custo,
-                        estoque,
-                        image_display.src
-                    )
-
-                    sucesso_dialog = ft.AlertDialog(
-                        title=ft.Text("Sucesso"),
-                        content=ft.Text("Produto cadastrado com sucesso!"),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(sucesso_dialog, page))],
-                    )
-                    page.overlay.append(sucesso_dialog)
-                    sucesso_dialog.open = True
-                    page.update()
-
-                    remove_product_card(new_card)  # Remove o card de criação após sucesso
-
-                    image_display.src = Undefined  # Reseta a imagem para a padrão
-
-                except Exception as error:
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text(f"Ocorreu um erro: {error}"),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)
-                    erro_dialog.open = True
-                    page.update()
-
-            # Função auxiliar para fechar o pop-up
-            def fechar_dialog(dialog, page):
-                dialog.open = False
-                page.update()
-                list_products("Todos")
-
-            new_card = ft.Container(
-                padding=10,
-                bgcolor=ft.Colors.GREY_800,
-                border_radius=30,
-                height=180,
-                content=ft.Row(controls=[  
-                    image_container,
-                    ft.Column(controls=[  
-                        nome_field, modelo_field,
-                        ft.Row([custo_field, estoque_field]),
-                    ], expand=True),
-                    ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: remove_product_card(new_card)),
-                    ft.IconButton(icon=ft.Icons.CHECK, icon_color=ft.Colors.GREEN, on_click=confirmar_novo_produto)
-                ])
-            )
-
-            product_cards.insert(0, new_card)
-            product_list.content.controls.insert(0, new_card)
-            page.update()
-
-        def create_product_card(id, nome, modelo, custo, estoque, foto):
-            is_editing = False
-
-            def Atualizar_produto(e):
-                page = e.page  # Pegando a referência da página
-
-                if not custo_field.value.strip() or not estoque_field.value.strip():
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text("Todos os campos obrigatórios devem ser preenchidos."),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)  # Adiciona o pop-up corretamente
-                    erro_dialog.open = True
-                    page.update()
-                    return
-
-                try:
-                    custo = float(custo_field.value)
-                    estoque = int(estoque_field.value)
-                except ValueError:
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text("Custo deve ser um número decimal e Estoque deve ser um número inteiro."),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)
-                    erro_dialog.open = True
-                    page.update()
-                    return
-
-                try:
-                    Product_Control.atualiza_Cadastro(
-                        id,
-                        nome,
-                        modelo,
-                        custo,
-                        estoque,
-                        image_display.src
-                    )
-
-                    sucesso_dialog = ft.AlertDialog(
-                        title=ft.Text("Sucesso"),
-                        content=ft.Text("Produto cadastrado com sucesso!"),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(sucesso_dialog, page))],
-                    )
-                    page.overlay.append(sucesso_dialog)
-                    sucesso_dialog.open = True
-                    page.update()
-
-                    image_display.src = Undefined  # Reseta a imagem para a padrão
-
-                except Exception as error:
-                    erro_dialog = ft.AlertDialog(
-                        title=ft.Text("Erro"),
-                        content=ft.Text(f"Ocorreu um erro: {error}"),
-                        actions=[ft.TextButton("OK", on_click=lambda _: fechar_dialog(erro_dialog, page))],
-                    )
-                    page.overlay.append(erro_dialog)
-                    erro_dialog.open = True
-                    page.update()
-
-
-            campos_nao_editaveis = ft.Column(controls=[  
-                ft.Text(nome, size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                ft.Text(f"Modelo: {modelo}", size=15, color=ft.Colors.WHITE)])
-            
-            card = ft.Container(
-                padding=10,
-                bgcolor=ft.Colors.GREY_800,
-                border_radius=30,
-                height=150,
-                content=ft.Row(controls=[  
-                    ft.Image(src=foto, height=120, width=120, border_radius=20),
-                    ft.Column(controls=[  
-                        campos_nao_editaveis,
-                        ft.Row([  
-                            ft.Text(f"Custo: R$ {custo:.2f}", size=15, color=ft.Colors.WHITE),
-                            ft.Text(f"Estoque: {estoque}", size=15, color=ft.Colors.WHITE)
-                        ])
-                    ], expand=True),
-                    ft.IconButton(icon=ft.Icons.EDIT, on_click=lambda _: toggle_edit_mode())
-                ])
-            )
-
-            image_display = ft.Image(src=foto, height=120, width=120, border_radius=20)
-
-            def change_image(e):
-                if e.files:
-                    image_display.src = e.files[0].path
-                    page.update()
-
-            file_picker_2 = ft.FilePicker(on_result=change_image)
-
-            page.add(file_picker_2)   
-            
-            image_container = ft.Container(
-                content=image_display,
-                on_click=lambda e: file_picker_2.pick_files()
-            )
-
-            custo_field = ft.TextField(value=f"{custo:.2f}", bgcolor=ft.Colors.GREY_700)
-            estoque_field = ft.TextField(value=f"{estoque}", bgcolor=ft.Colors.GREY_700)
-
-            card_on_edit = ft.Container(
-                padding=10,
-                bgcolor=ft.Colors.GREY_800,
-                border_radius=30,
-                height=150,
-                content=ft.Row(controls=[  
-                    image_container,
-                    ft.Column(controls=[  
-                        campos_nao_editaveis,
-                        ft.Row([  
-                            custo_field,
-                            estoque_field
-                        ])
-                    ], expand=True),
-                    ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: toggle_edit_mode()),
-                    ft.IconButton(icon=ft.Icons.SAVE, icon_color=ft.Colors.GREEN, on_click=Atualizar_produto)
-                ])
-            )
-
-            # Função auxiliar para fechar o pop-up
-            def fechar_dialog(dialog, page):
-                dialog.open = False
-                page.update()
-                list_products("Todos")
-
-            def toggle_edit_mode():
-                nonlocal is_editing
-                is_editing = not is_editing
-
-                if is_editing:
-                    index = product_list.content.controls.index(card)  # Obtém a posição original do card
-
-                    product_list.content.controls.pop(index)  # Remove o card original
-                    product_list.content.controls.insert(index, card_on_edit)  # Insere o card de edição no mesmo lugar
-                else:
-                    index = product_list.content.controls.index(card_on_edit)  # Obtém a posição do card editável
-
-                    print("Cancelando edição")
-                    product_list.content.controls.pop(index)  # Remove o card editável
-                    product_list.content.controls.insert(index, card)  # Insere o card original no mesmo lugar
-
-                page.update()
-
-            
-            return card
-
-        def list_products(filtro):
-            global is_creating
-            if is_creating:
-                product_cards.clear()
-                product_list.content.controls.clear()
-                is_creating = False
-                list_products(filtro)
-                return
-
-            product_cards.clear()
-            product_list.content.controls.clear()
-
-            product_list_data = Product_Control.product_List(filtro)
-            for produto in product_list_data:
-                product_card = create_product_card(*produto)
-                product_cards.append(product_card)
-
-            product_list.content.controls.extend(product_cards)
-            campoPesquisa.value = ""
-            page.update()
-            
-        product_list_data = Product_Control.product_List("Todos")
-        for produto in product_list_data:
-            product_card = create_product_card(*produto)
-            product_cards.append(product_card)
-
-
-        product_list = ft.Container(
-            padding=10,
-            expand=True,
-            content=ft.Column(controls=product_cards, scroll="auto", expand=True)
+    def _show_dialog(self, title, content, callback=None):
+        dialog = ft.AlertDialog(
+            title=ft.Text(title),
+            content=ft.Text(content),
+            actions=[ft.TextButton("OK", on_click=callback or self._close_dialog)]
         )
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
 
-        campoPesquisa = ft.TextField(label="Pesquisar", hint_text="Digite sua busca...", border_radius=30)
+    def _close_dialog(self, e=None):
+        if e:
+            e.page.overlay[-1].open = False
+            self.page.update()
+            self.list_products("Todos")
 
-        top_bar = ft.Container(
+    def _validate_inputs(self, nome, modelo, custo, estoque):
+        if not all([nome.strip(), modelo.strip(), custo.strip(), estoque.strip()]):
+            return False, "Todos os campos obrigatórios devem ser preenchidos."
+        
+        try:
+            return True, (float(custo), int(estoque))
+        except ValueError:
+            return False, "Custo deve ser um número decimal e Estoque deve ser um número inteiro."
+
+    def _create_product_card(self, id, nome, modelo, custo, estoque, foto):
+        is_editing = False
+        image_display = ft.Image(src=foto, height=120, width=120, border_radius=20)
+        campos_nao_editaveis = ft.Column(controls=[
+            ft.Text(nome, size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            ft.Text(f"Modelo: {modelo}", size=15, color=ft.Colors.WHITE)
+        ])
+
+        # Componentes editáveis
+        custo_field = ft.TextField(value=f"{custo:.2f}", bgcolor=ft.Colors.GREY_700)
+        estoque_field = ft.TextField(value=f"{estoque}", bgcolor=ft.Colors.GREY_700)
+
+        def update_product(e):
+            valid, result = self._validate_inputs(nome, modelo, custo_field.value, estoque_field.value)
+            if not valid:
+                self._show_dialog("Erro", result)
+                return
+
+            try:
+                Product_Control.atualiza_Cadastro(id, nome, modelo, *result, image_display.src)
+                self._show_dialog("Sucesso", "Produto atualizado com sucesso!", self._close_dialog)
+                toggle_edit_mode()
+            except Exception as error:
+                self._show_dialog("Erro", f"Ocorreu um erro: {error}")
+
+        def toggle_edit_mode(e=None):
+            nonlocal is_editing
+            is_editing = not is_editing
+
+            new_content = card_edit if is_editing else card_display
+            card.content = new_content
+            self.page.update()
+
+        # Card de visualização
+        card_display = ft.Row(controls=[
+            ft.Image(src=foto, height=120, width=120, border_radius=20),
+            ft.Column(controls=[
+                campos_nao_editaveis,
+                ft.Row([
+                    ft.Text(f"Custo: R$ {custo:.2f}", size=15, color=ft.Colors.WHITE),
+                    ft.Text(f"Estoque: {estoque}", size=15, color=ft.Colors.WHITE)
+                ])
+            ], expand=True),
+            ft.IconButton(icon=ft.Icons.EDIT, on_click=lambda _: toggle_edit_mode())
+        ])
+
+        # Card de edição
+        card_edit = ft.Row(controls=[
+            ft.Container(
+                content=image_display,
+                on_click=lambda e: setattr(self, 'current_image_display', image_display) or self.file_picker.pick_files()
+            ),
+            ft.Column(controls=[
+                campos_nao_editaveis,
+                ft.Row([custo_field, estoque_field])
+            ], expand=True),
+            ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda e: toggle_edit_mode()),
+            ft.IconButton(icon=ft.Icons.SAVE, icon_color=ft.Colors.GREEN, on_click=update_product)
+        ])
+
+        card = ft.Container(
             padding=10,
             bgcolor=ft.Colors.GREY_800,
             border_radius=30,
-            content=ft.Row(
-                controls=[  
-                    campoPesquisa,
-                    ft.ElevatedButton("Buscar", height=50, width=75, on_click=lambda _: list_products(campoPesquisa.value.strip())),
+            height=150,
+            content=card_display
+        )
+
+        return card
+
+    def _create_new_card(self):
+        if self.is_creating:
+            return
+        self.is_creating = True
+
+        image_display = ft.Image(src=UNDEFINED_IMAGE, height=120, width=120, border_radius=20)
+        fields = {
+            'nome': ft.TextField(label="Nome do Produto", bgcolor=ft.Colors.GREY_700),
+            'modelo': ft.TextField(label="Modelo", bgcolor=ft.Colors.GREY_700),
+            'custo': ft.TextField(label="Custo", bgcolor=ft.Colors.GREY_700),
+            'estoque': ft.TextField(label="Estoque", bgcolor=ft.Colors.GREY_700)
+        }
+
+        def confirm_product(e):
+            valid, result = self._validate_inputs(
+                fields['nome'].value,
+                fields['modelo'].value,
+                fields['custo'].value,
+                fields['estoque'].value
+            )
+            
+            if not valid:
+                self._show_dialog("Erro", result)
+                return
+
+            try:
+                Product_Control.novo_Cadastro(
+                    fields['nome'].value.strip(),
+                    fields['modelo'].value.strip(),
+                    *result,
+                    image_display.src
+                )
+                self._show_dialog("Sucesso", "Produto cadastrado com sucesso!", self._close_dialog)
+            except Exception as error:
+                self._show_dialog("Erro", f"Ocorreu um erro: {error}")
+
+        new_card = ft.Container(
+            padding=10,
+            bgcolor=ft.Colors.GREY_800,
+            border_radius=30,
+            height=180,
+            content=ft.Row(controls=[
+                ft.Container(
+                    content=image_display,
+                    on_click=lambda e: setattr(self, 'current_image_display', image_display) or self.file_picker.pick_files()
+                ),
+                ft.Column(controls=[
+                    fields['nome'], 
+                    fields['modelo'],
+                    ft.Row([fields['custo'], fields['estoque']])
+                ], expand=True),
+                ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: self.remove_product(new_card)),
+                ft.IconButton(icon=ft.Icons.CHECK, icon_color=ft.Colors.GREEN, on_click=confirm_product)
+            ])
+        )
+
+        self.product_list.content.controls.insert(0, new_card)
+        self.page.update()
+
+    def remove_product(self, card):
+        self.product_list.content.controls.remove(card)
+        self.is_creating = False
+        self.page.update()
+
+    def list_products(self, filtro):
+        self.product_list.content.controls.clear()
+        self.is_creating = False
+
+        for produto in Product_Control.product_List(filtro):
+            self.product_list.content.controls.append(
+                self._create_product_card(*produto)
+            )
+        
+        self.page.update()
+
+    def create_product_menu(self):
+        try:
+            # Componentes da UI
+            self.product_list = ft.Container(
+                padding=10,
+                expand=True,
+                content=ft.Column(scroll="auto", expand=True)
+            )
+            
+            campo_pesquisa = ft.TextField(
+                label="Pesquisar", 
+                hint_text="Digite sua busca...", 
+                border_radius=30,
+                on_submit=lambda e: self.list_products(campo_pesquisa.value.strip())
+            )
+
+            top_bar = ft.Container(
+                padding=10,
+                bgcolor=ft.Colors.GREY_800,
+                border_radius=30,
+                content=ft.Row(controls=[
+                    campo_pesquisa,
+                    ft.ElevatedButton("Buscar", height=50, width=75,
+                                     on_click=lambda _: self.list_products(campo_pesquisa.value.strip())),
                     ft.Container(expand=True),
-                    ft.IconButton(icon=ft.Icons.REFRESH, on_click=lambda _: list_products("Todos")),
+                    ft.IconButton(icon=ft.Icons.REFRESH, on_click=lambda _: self.list_products("Todos")),
                     ft.ElevatedButton(
                         "Novo Cadastro",
                         bgcolor=ft.Colors.GREEN_500,
                         height=50,
                         color=ft.Colors.BLACK,
-                        on_click=lambda _: create_new_card()
+                        on_click=lambda _: self._create_new_card()
                     ),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
             )
-        )
 
-        product_menu = ft.Container(
-            expand=True,
-            padding=10,
-            content=ft.Column(controls=[top_bar, product_list], expand=True),
-        )
+            # Carregar dados iniciais
+            self.list_products("Todos")
 
-        return product_menu
-    
-    except Exception as e:
-        raise e
-
-
-
+            return ft.Container(
+                expand=True,
+                padding=10,
+                content=ft.Column(controls=[top_bar, self.product_list], expand=True)
+            )
+        
+        except Exception as e:
+            self._show_dialog("Erro", str(e))
 
 
 def main(page: ft.Page):
@@ -367,9 +250,11 @@ def main(page: ft.Page):
     page.window_height = 800
     page.window_resizable = True
 
-    productMenu = create_product_menu(page)
+    file_picker = ft.FilePicker()
+    page.overlay.append(file_picker)
 
-    page.add(productMenu)
+    product_menu = ProductMenu(page, file_picker)
+    page.add(product_menu.create_product_menu())
     page.update()
 
 
