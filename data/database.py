@@ -7,7 +7,6 @@ def conectar_banco(nome_loja: str):
 
         if os.path.isfile(db):
             conn = sqlite3.connect(db)
-            print("Conexão com o banco de dados estabelecida com sucesso!")
             return conn
         
         else:

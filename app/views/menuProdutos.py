@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from app.controllers.controleProduto import productList, novoCadastro
+from app.controllers.controleProduto import Product_Control
 
 is_creating = False  # Variável de controle
 
@@ -81,7 +81,7 @@ def create_product_menu(page):
                     return
 
                 try:
-                    novoCadastro(
+                    Product_Control.novo_Cadastro(
                         nome_field.value.strip(),
                         modelo_field.value.strip(),
                         custo,
@@ -138,7 +138,7 @@ def create_product_menu(page):
             product_list.content.controls.insert(0, new_card)
             page.update()
 
-        def create_product_card(nome, modelo, custo, estoque, foto):
+        def create_product_card(id, nome, modelo, custo, estoque, foto):
             is_editing = False
 
             def Atualizar_produto(e):
@@ -170,7 +170,8 @@ def create_product_menu(page):
                     return
 
                 try:
-                    novoCadastro(
+                    Product_Control.atualiza_Cadastro(
+                        id,
                         nome,
                         modelo,
                         custo,
@@ -255,7 +256,7 @@ def create_product_menu(page):
                             estoque_field
                         ])
                     ], expand=True),
-                    ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: remove_product_card(card)),
+                    ft.IconButton(icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, on_click=lambda _: toggle_edit_mode()),
                     ft.IconButton(icon=ft.Icons.SAVE, icon_color=ft.Colors.GREEN, on_click=Atualizar_produto)
                 ])
             )
@@ -270,12 +271,14 @@ def create_product_menu(page):
                 nonlocal is_editing
                 is_editing = not is_editing
 
-                index = product_list.content.controls.index(card)  # Obtém a posição original do card
-
                 if is_editing:
+                    index = product_list.content.controls.index(card)  # Obtém a posição original do card
+
                     product_list.content.controls.pop(index)  # Remove o card original
                     product_list.content.controls.insert(index, card_on_edit)  # Insere o card de edição no mesmo lugar
                 else:
+                    index = product_list.content.controls.index(card_on_edit)  # Obtém a posição do card editável
+
                     print("Cancelando edição")
                     product_list.content.controls.pop(index)  # Remove o card editável
                     product_list.content.controls.insert(index, card)  # Insere o card original no mesmo lugar
@@ -297,7 +300,7 @@ def create_product_menu(page):
             product_cards.clear()
             product_list.content.controls.clear()
 
-            product_list_data = productList(filtro)
+            product_list_data = Product_Control.product_List(filtro)
             for produto in product_list_data:
                 product_card = create_product_card(*produto)
                 product_cards.append(product_card)
@@ -306,7 +309,7 @@ def create_product_menu(page):
             campoPesquisa.value = ""
             page.update()
             
-        product_list_data = productList("Todos")
+        product_list_data = Product_Control.product_List("Todos")
         for produto in product_list_data:
             product_card = create_product_card(*produto)
             product_cards.append(product_card)

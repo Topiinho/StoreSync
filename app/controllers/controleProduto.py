@@ -1,4 +1,4 @@
-from app.models.Produto import listar_produtos, cadastrar_produto
+from app.models.Produto import Product_Service, Produto
 import pandas as pd
 import tempfile
 from PIL import Image
@@ -6,89 +6,120 @@ import io
 import os
 import threading
 
-def blob_to_temp_file(blob, temp_files):
-    try:
-        # Converte o blob em um arquivo temporário
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-            # Cria uma imagem a partir do blob
-            image = Image.open(io.BytesIO(blob))
 
-            # Salva a imagem no arquivo temporário
-            image.save(temp_file, format='PNG')
 
-            print(f"Arquivo temporário salvo em: {temp_file.name}")
+class Product_Control:
 
-            # Adiciona o caminho do arquivo à lista de arquivos temporários
-            temp_files.append(temp_file.name)
+    def blob_to_temp_file(blob):
+        try:
+            # Converte o blob em um arquivo temporário
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
+                temp_file_path = temp_file.name  # Guarda o caminho antes de fechar o arquivo
             
-            return temp_file.name
-    except Exception as e:
-        raise e
+            # Abre a imagem, salva e fecha
+            image = Image.open(io.BytesIO(blob))
+            image.save(temp_file_path, format='PNG')
+            image.close()  # Fecha a imagem para liberar o arquivo
 
-def productList(filtro):
-    try:
-        if filtro == "Todos":
-            tabela = listar_produtos("Todos", "")
-            df = pd.DataFrame(tabela, columns=["id", "nome", "modelo", "custo", "estoque", "blob"])
-            df["modelo"] = df["modelo"].fillna("Único")
+            # Aguarda 10 segundos antes de excluir (pode aumentar o tempo se necessário)
+            threading.Timer(10, lambda: os.remove(temp_file_path) if os.path.exists(temp_file_path) else None).start()
 
-            # Lista para armazenar os caminhos dos arquivos temporários
-            temp_files = []
+            return temp_file_path
+        except Exception as e:
+            print(f"Erro ao criar arquivo temporário: {e}")
+            return None
 
-            # Converte o blob em arquivos temporários e armazena o caminho
-            df["foto"] = df["blob"].apply(lambda blob: blob_to_temp_file(blob, temp_files))
 
-            df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
+    def product_List(filtro):
+        try:
+            # Verifica se o filtro é "Todos"
+            if filtro == "Todos" or filtro == None or filtro == "":    
+                ids = Product_Service.listar_produtos_id()
+                produtos_lista = []
 
-            limpar_temp_arquivos(temp_files)
+                for id in ids:
+                    produto = Produto(id)
+                    produtos_lista.append({
+                        "id": produto.Id,
+                        "nome": produto.Nome,
+                        "modelo": produto.Modelo,
+                        "custo": produto.CustoMedio,
+                        "estoque": produto.Estoque,
+                        "blob": produto.Foto
+                    })
 
-            return df_filtrado.to_records(index=False).tolist()
-        
-        elif filtro == "" or filtro == None:
-            return productList("Todos")
-        
-        else:
-            tabela = listar_produtos(filtro, "NomeProduto")
-            df = pd.DataFrame(tabela, columns=["id", "nome", "modelo", "custo", "estoque", "blob"])
-            df["modelo"] = df["modelo"].fillna("Único")
+                if produtos_lista:
+                    df = pd.DataFrame(produtos_lista)
+                    df["foto"] = df["blob"].apply(lambda blob: Product_Control.blob_to_temp_file(blob))
+                    df_filtrado = df[["id", "nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
+                    return df_filtrado.to_records(index=False).tolist()
+                else:
+                    return []
 
-            # Lista para armazenar os caminhos dos arquivos temporários
-            temp_files = []
+                
+            # Verifica se o filtro é um nome de produto
+            else:
+                ids = Product_Service.listar_produtos_id()
+                produto_desejado = None
+                while produto_desejado == None:
+                    for id in ids:
+                        produto = Produto(id)
+                        if produto.nome == filtro:
+                            produto_desejado = produto
+                            break
+                
+                if produto_desejado == None:
+                    return None
+                else:
+                    df = pd.DataFrame([{
+                        "id": produto.id,
+                        "nome": produto.nome,
+                        "modelo": produto.modelo,
+                        "custo": produto.custo,
+                        "estoque": produto.estoque,
+                        "blob": produto.blob
+                    }])
 
-            # Converte o blob em arquivos temporários e armazena o caminho
-            df["foto"] = df["blob"].apply(lambda blob: blob_to_temp_file(blob, temp_files))
+                    df["foto"] = df["blob"].apply(lambda blob: Product_Control.blob_to_temp_file(blob))
 
-            df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]].sort_values(by="nome")
+                    df_filtrado = df[["nome", "modelo", "custo", "estoque", "foto"]]
+                    return df_filtrado.to_records(index=False).tolist()
+                
+        except Exception as e:
+            raise e
 
-            limpar_temp_arquivos(temp_files)
 
-            return df_filtrado.to_records(index=False).tolist()
+    def novo_Cadastro(nome: str, modelo: str, custo: float, estoque: int, foto: str):
+        try:
+            with open(foto, "rb") as file:
+                blob = file.read()
 
-    except Exception as e:
-        raise e
+            Product_Service.cadastrar_produto(nome, modelo, custo, estoque, blob)
+        except Exception as e:
+            raise e
 
-def delete_temp_file(file_path):
-    try:
-        os.remove(file_path)
-        print(f"Arquivo temporário removido: {file_path}")
-    except Exception as e:
-        raise e
 
-def limpar_temp_arquivos(temp_files):
-    # Espera 5 segundos (ou o tempo que você achar necessário)
-    threading.Timer(5, lambda: [delete_temp_file(f) for f in temp_files]).start()
+    def atualiza_Cadastro(id: int, nome: str, modelo: str, custo: float, estoque: int, foto: str):
+        try:
+            produto = Produto(id)
 
-def imagem_Blob(foto: str):
-    try:
-        with open(foto, "rb") as file:
-            blob = file.read()
-        return blob
-    except Exception as e:
-        raise e
+            if os.path.exists(foto):
+                with open(foto, "rb") as file:
+                    blob = file.read()   
+                
+                    produto.atualizar_nome(nome)
+                    produto.atualizar_modelo(modelo)
+                    produto.atualizar_custoMedio(custo)
+                    produto.atualizar_estoque(estoque)
+                    produto.atualizar_foto(blob)
+            
+            else:
+                    produto.atualizar_nome(nome)
+                    produto.atualizar_modelo(modelo)
+                    produto.atualizar_custoMedio(custo)
+                    produto.atualizar_estoque(estoque)
 
-def novoCadastro(nome: str, modelo: str, custo: float, estoque: int, foto: str):
-    try:
-        blob = imagem_Blob(foto)
-        cadastrar_produto(nome, modelo, custo, estoque, blob)
-    except Exception as e:
-        raise e
+        except Exception as e:
+            raise e
+
+
