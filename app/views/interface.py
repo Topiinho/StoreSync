@@ -1,6 +1,6 @@
 import flet as ft
-from menuSideBar import create_sidebar
-from menuProdutos import Product_menu
+from menuSideBar import Side_Bar
+from menuProdutos import Product_Menu
 
 def main(page: ft.Page):
     page.bgcolor = "#7c7c7c"
@@ -15,8 +15,8 @@ def main(page: ft.Page):
     page.overlay.append(file_picker)
 
 
-    sidebar, toggle_sidebar = create_sidebar(page)
-    productMenu = Product_menu(page, file_picker)
+    sidebar, toggle_sidebar = Side_Bar.create_sidebar(page)
+    productMenu = Product_Menu(page, file_picker)
 
 
     layout = ft.Row(

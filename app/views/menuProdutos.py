@@ -8,7 +8,7 @@ from app.controllers.controleProduto import Product_Control
 
 UNDEFINED_IMAGE = "app/views/assets/Undefined_Icon.png"
 
-class ProductMenu:
+class Product_Menu:
     def __init__(self, page, file_picker):
         self.page = page
         self.file_picker = file_picker
@@ -198,7 +198,6 @@ class ProductMenu:
         try:
             # Componentes da UI
             self.product_list = ft.Container(
-                padding=10,
                 expand=True,
                 content=ft.Column(scroll="auto", expand=True)
             )
@@ -243,19 +242,19 @@ class ProductMenu:
             self._show_dialog("Erro", str(e))
 
 
-def main(page: ft.Page):
-    page.bgcolor = ft.Colors.GREY_900
-    page.padding = 0
-    page.window_width = 1200
-    page.window_height = 800
-    page.window_resizable = True
+# def main(page: ft.Page):
+#     page.bgcolor = ft.Colors.GREY_900
+#     page.padding = 0
+#     page.window_width = 1200
+#     page.window_height = 800
+#     page.window_resizable = True
 
-    file_picker = ft.FilePicker()
-    page.overlay.append(file_picker)
+#     file_picker = ft.FilePicker()
+#     page.overlay.append(file_picker)
 
-    product_menu = ProductMenu(page, file_picker)
-    page.add(product_menu.create_product_menu())
-    page.update()
+#     product_menu = Product_Menu(page, file_picker)
+#     page.add(product_menu.create_product_menu())
+#     page.update()
 
 
-ft.app(target=main, assets_dir="assets")
+# ft.app(target=main, assets_dir="assets")
